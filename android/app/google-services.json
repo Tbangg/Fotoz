@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "105283033477",
-    "project_id": "fotoz-3a8a4",
-    "storage_bucket": "fotoz-3a8a4.firebasestorage.app"
+    "project_number": "655945014417",
+    "project_id": "fotoz-f8ac4",
+    "storage_bucket": "fotoz-f8ac4.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:105283033477:android:71d124a22855bd943e4cec",
+        "mobilesdk_app_id": "1:655945014417:android:dbf85621f3ca91afdc7330",
         "android_client_info": {
           "package_name": "com.example.fotoz"
         }
@@ -15,26 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBQMDNTztsOs9wJRn4LcmdrmlBAElTl6eY"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:105283033477:android:e7ca837f21389a623e4cec",
-        "android_client_info": {
-          "package_name": "com.htb.fotoz"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBQMDNTztsOs9wJRn4LcmdrmlBAElTl6eY"
+          "current_key": "AIzaSyDGfMjuKAIk4yQzVpAqMza_298yaOPqDfk"
         }
       ],
       "services": {

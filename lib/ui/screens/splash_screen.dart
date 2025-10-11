@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fotoz/ui/theme/app_theme.dart';
-// import 'login_screen.dart';
-// import 'home_screen.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -54,41 +54,6 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// TẠM THỜI THÊM Ở CUỐI FILE splash_screen.dart ĐỂ TEST
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Text(
-          "Đây là LoginScreen",
-          style: TextStyle(fontSize: 24, color: Colors.black),
-        ),
-      ),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Text(
-          "Đây là HomeScreen",
-          style: TextStyle(fontSize: 24, color: Colors.black),
         ),
       ),
     );

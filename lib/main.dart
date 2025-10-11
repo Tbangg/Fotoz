@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
-import 'ui/theme/app_theme.dart';
-import 'ui/screens/splash_screen.dart';
-// import 'ui/screens/home_screen.dart';
+import 'package:fotoz/ui/screens/auth.wrapper.dart';
+import 'package:fotoz/ui/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'dart:developer'; // Import thư viện developer để log
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      log("Firebase initialized successfully!"); // In log khi thành công
+    }
+  } catch (e) {
+    // In ra lỗi cụ thể nếu có
+    log("Failed to initialize Firebase: $e");
+  }
+
   runApp(const FotozApp());
 }
 
@@ -20,7 +32,7 @@ class FotozApp extends StatelessWidget {
       title: 'Fotoz',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

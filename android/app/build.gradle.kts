@@ -45,3 +45,11 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("com.google.firebase:firebase-auth")
+}
+
+apply(plugin = "com.google.gms.google-services")
+
+
