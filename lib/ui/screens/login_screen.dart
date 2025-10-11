@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fotoz/services/auth_service.dart';
+import 'package:fotoz/ui/screens/home_screen.dart';
+import 'package:fotoz/ui/screens/signup_screen.dart';
 import 'package:fotoz/ui/theme/app_theme.dart';
-import 'signup_screen.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,29 +19,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
 
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: AppTheme.darkBlue),
+      );
+    }
+  }
+
   void _login() async {
-    // Check if the widget is still in the tree before proceeding
     if (!mounted) return;
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorSnackBar("Please enter email and password");
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
-      final user = await _authService.signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-
+      final user = await _authService.signIn(email, password);
       if (user != null && mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fail to Sign In: ${e.toString()}')),
-        );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        _showErrorSnackBar('Incorrect email or password');
+      } else if (e.code == 'invalid-email') {
+        _showErrorSnackBar('Invalid email address');
+      } else {
+        _showErrorSnackBar('An error has been caught, please try again');
       }
+    } catch (e) {
+      _showErrorSnackBar('An unknown error occurred');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -57,26 +75,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen height to set minimum height for the content
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: AppTheme.offWhite,
-      // Use SingleChildScrollView to prevent overflow when keyboard appears
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(28),
-          // Use ConstrainedBox to ensure the Column takes at least the screen height
-          // This keeps the content centered vertically.
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight:
-                  screenHeight -
-                  topPadding -
-                  bottomPadding -
-                  56, // 56 = 28 * 2 for padding
+              minHeight: screenHeight - topPadding - bottomPadding - 56,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
