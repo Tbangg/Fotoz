@@ -42,6 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final user = await _authService.signIn(email, password);
       if (user != null && mounted) {
+        await user.updateDisplayName("User ${user.email!.split('@')[0]}");
+        await user.updatePhotoURL("https://i.pravatar.cc/150?u=${user.uid}");
+        await user.reload();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
