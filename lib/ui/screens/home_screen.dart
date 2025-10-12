@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fotoz/ui/screens/profile_screen.dart';
+import 'package:fotoz/ui/screens/history_screen.dart';
 import 'package:fotoz/ui/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   CameraController? _cameraController;
   Future<void>? _initializeControllerFuture;
   bool _isRearCamera = true;
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -48,12 +53,66 @@ class _HomeScreenState extends State<HomeScreen> {
     _initCamera();
   }
 
+  Future<void> _captureAndUpload() async {
+    try {
+      await _initializeControllerFuture;
+      final picture = await _cameraController!.takePicture();
+      final file = File(picture.path);
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Bạn cần đăng nhập để chụp ảnh.")),
+        );
+        return;
+      }
+
+      setState(() {
+        _isUploading = true;
+      });
+
+      // 🔹 Upload lên Firebase Storage
+      final ref = FirebaseStorage.instance.ref().child(
+        'uploads/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+
+      await ref.putFile(file);
+      final url = await ref.getDownloadURL();
+
+      // 🔹 Lưu metadata vào Firestore
+      await FirebaseFirestore.instance.collection('photos').add({
+        'userId': user.uid,
+        'userName': user.displayName ?? 'Người dùng',
+        'url': url,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ảnh đã được lưu vào Lịch sử 💛"),
+          backgroundColor: AppTheme.darkBlue,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Lỗi chụp ảnh: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: AppTheme.offWhite, // be nhạt
+      backgroundColor: AppTheme.offWhite,
       body: SafeArea(
         child: Stack(
           alignment: Alignment.center,
@@ -176,32 +235,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Nút chụp ảnh
                       GestureDetector(
-                        onTap: () async {
-                          try {
-                            await _initializeControllerFuture;
-                            final picture = await _cameraController!
-                                .takePicture();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Đã chụp ảnh: ${picture.path}"),
-                                backgroundColor: AppTheme.darkBlue,
+                        onTap: _isUploading ? null : _captureAndUpload,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppTheme.beige,
+                                border: Border.all(
+                                  color: AppTheme.darkBlue,
+                                  width: 5,
+                                ),
                               ),
-                            );
-                          } catch (e) {
-                            print("Lỗi chụp ảnh: $e");
-                          }
-                        },
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppTheme.beige, // màu be nhạt
-                            border: Border.all(
-                              color: AppTheme.darkBlue,
-                              width: 5,
                             ),
-                          ),
+                            if (_isUploading)
+                              const CircularProgressIndicator(
+                                color: AppTheme.darkBlue,
+                              ),
+                          ],
                         ),
                       ),
 
@@ -222,34 +276,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 25),
 
                   // Nút “Lịch sử”
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.beige.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.history, size: 20, color: AppTheme.darkBlue),
-                        SizedBox(width: 6),
-                        Text(
-                          "Lịch sử",
-                          style: TextStyle(
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HistoryScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.beige.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.history,
+                            size: 20,
                             color: AppTheme.darkBlue,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 22,
-                          color: AppTheme.darkBlue,
-                        ),
-                      ],
+                          SizedBox(width: 6),
+                          Text(
+                            "Lịch sử",
+                            style: TextStyle(
+                              color: AppTheme.darkBlue,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 22,
+                            color: AppTheme.darkBlue,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

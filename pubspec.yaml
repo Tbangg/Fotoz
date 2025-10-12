@@ -19,6 +19,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_native_splash: ^2.4.6
   camera: ^0.10.5+5
+  permission_handler: ^11.3.0
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:
